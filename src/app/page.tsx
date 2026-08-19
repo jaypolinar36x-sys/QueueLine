@@ -75,16 +75,22 @@ export default function HomePage() {
     }
   }, [myTicket?.status, soundEnabled, playTurnSound]);
 
-  function enableSound() {
+  const prepareTurnSound = useCallback(async () => {
+    const AudioContextClass = window.AudioContext;
+    if (!AudioContextClass) return;
+
+    const audioContext = audioContextRef.current ?? new AudioContextClass();
+    audioContextRef.current = audioContext;
+    await audioContext.resume();
     setSoundEnabled(true);
-    playTurnSound();
-  }
+  }, []);
 
   const joinQueue = useCallback(async () => {
     if (!name.trim()) return;
     setSubmitting(true);
     setError(null);
     try {
+      await prepareTurnSound();
       const res = await fetch("/api/queue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -101,7 +107,7 @@ export default function HomePage() {
     } finally {
       setSubmitting(false);
     }
-  }, [name, refresh]);
+  }, [name, prepareTurnSound, refresh]);
 
   const waitingAhead = myTicket
     ? waiting.filter((e) => e.ticketNumber < myTicket.ticketNumber).length
@@ -147,14 +153,10 @@ export default function HomePage() {
 
         {/* Join form */}
         <section className="mt-6 rounded-2xl bg-white p-4 shadow-xl sm:p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Join the queue</h2>
-          <button
-            type="button"
-            onClick={enableSound}
-            className="mt-3 w-full rounded-lg border border-indigo-300 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-50 sm:w-auto"
-          >
-            {soundEnabled ? "Sound enabled" : "Enable turn sound"}
-          </button>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-slate-900">Join the queue</h2>
+            {soundEnabled && <span className="text-sm text-emerald-700">Sound ready</span>}
+          </div>
           <form
             onSubmit={(e) => {
               e.preventDefault();
