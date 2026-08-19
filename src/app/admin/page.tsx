@@ -41,6 +41,11 @@ export default function AdminPage() {
     setLoggingIn(false);
   }
 
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    setAuthenticated(false);
+  }
+
   const call = useCallback(
     async (action: string, path: string, body?: object) => {
       setBusy(action);
@@ -103,18 +108,26 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto max-w-4xl px-6 py-10">
-        <header className="flex items-center justify-between">
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
+        <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Admin Panel</h1>
             <p className="text-sm text-slate-500">Manage the queue</p>
           </div>
-          <Link
-            href="/"
-            className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200"
-          >
-            ← Back to queue
-          </Link>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Link
+              href="/"
+              className="rounded-full border border-slate-300 px-4 py-2 text-center text-sm font-medium text-slate-600 transition hover:bg-slate-200"
+            >
+              ← Back to queue
+            </Link>
+            <button
+              onClick={logout}
+              className="rounded-full border border-rose-300 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+            >
+              Log out
+            </button>
+          </div>
         </header>
 
         {error && (
@@ -125,13 +138,13 @@ export default function AdminPage() {
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {/* Now serving */}
-          <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
             <p className="text-xs font-medium uppercase tracking-widest text-slate-500">
               Currently serving
             </p>
             {serving ? (
               <>
-                <div className="mt-2 flex items-baseline gap-3">
+                <div className="mt-2 flex flex-wrap items-baseline gap-3">
                   <span className="text-4xl font-bold">#{serving.ticketNumber}</span>
                   <span className="text-xl">{serving.name}</span>
                 </div>
@@ -149,13 +162,13 @@ export default function AdminPage() {
           </section>
 
           {/* Next up */}
-          <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
             <p className="text-xs font-medium uppercase tracking-widest text-slate-500">
               Next in line
             </p>
             {nextPerson ? (
               <>
-                <div className="mt-2 flex items-baseline gap-3">
+                <div className="mt-2 flex flex-wrap items-baseline gap-3">
                   <span className="text-4xl font-bold">#{nextPerson.ticketNumber}</span>
                   <span className="text-xl">{nextPerson.name}</span>
                 </div>
@@ -183,8 +196,8 @@ export default function AdminPage() {
         </div>
 
         {/* Waiting list */}
-        <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <div className="flex items-center justify-between">
+        <section className="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold">
               Waiting ({waiting.length})
             </h2>
@@ -221,7 +234,7 @@ export default function AdminPage() {
 
         {/* Completed */}
         {done.length > 0 && (
-          <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <section className="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
             <h2 className="text-lg font-semibold text-slate-500">
               Completed ({done.length})
             </h2>
@@ -254,8 +267,8 @@ function WaitingRow({
 }) {
   const waited = formatWait(entry.createdAt);
   return (
-    <li className="flex items-center justify-between py-3">
-      <div>
+    <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+      <div className="min-w-0">
         <span className="font-bold">#{entry.ticketNumber}</span>{" "}
         <span className="font-medium">{entry.name}</span>
         <span className="ml-2 text-xs text-slate-400">{waited}</span>
