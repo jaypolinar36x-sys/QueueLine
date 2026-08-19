@@ -78,7 +78,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         {/* Header */}
         <header className="flex items-center justify-between">
           <div>
@@ -115,25 +115,25 @@ export default function HomePage() {
         </section>
 
         {/* Join form */}
-        <section className="mt-6 rounded-2xl bg-white p-6 shadow-xl">
+        <section className="mt-6 rounded-2xl bg-white p-4 shadow-xl sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900">Join the queue</h2>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               joinQueue();
             }}
-            className="mt-4 flex gap-3"
+            className="mt-4 flex flex-col gap-3 sm:flex-row"
           >
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
-              className="flex-1 rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="min-w-0 w-full flex-1 rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             />
             <button
               type="submit"
               disabled={submitting || !name.trim()}
-              className="rounded-lg bg-indigo-600 px-6 py-3 font-medium text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-indigo-600 px-6 py-3 font-medium text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:shrink-0"
             >
               {submitting ? "Joining…" : "Join"}
             </button>
