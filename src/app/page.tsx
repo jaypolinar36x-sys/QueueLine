@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useQueue } from "@/hooks/useQueue";
 import type { QueueEntry } from "@/lib/queue";
 import Link from "next/link";
@@ -37,6 +37,8 @@ export default function HomePage() {
   const [myTicket, setMyTicket] = useState<QueueEntry | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const waiting = entries.filter((e) => e.status === "waiting");
   const serving = entries.find((e) => e.status === "serving");
@@ -48,6 +50,35 @@ export default function HomePage() {
       if (updated) setMyTicket(updated);
     }
   }, [entries, myTicket?.id]);
+
+  const playTurnSound = useCallback(() => {
+    const AudioContextClass = window.AudioContext;
+    if (!AudioContextClass) return;
+
+    const audioContext = audioContextRef.current ?? new AudioContextClass();
+    audioContextRef.current = audioContext;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.frequency.value = 880;
+    oscillator.type = "sine";
+    gain.gain.setValueAtTime(0.001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, audioContext.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.45);
+    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.45);
+  }, []);
+
+  useEffect(() => {
+    if (myTicket?.status === "serving" && soundEnabled) {
+      playTurnSound();
+    }
+  }, [myTicket?.status, soundEnabled, playTurnSound]);
+
+  function enableSound() {
+    setSoundEnabled(true);
+    playTurnSound();
+  }
 
   const joinQueue = useCallback(async () => {
     if (!name.trim()) return;
@@ -117,6 +148,13 @@ export default function HomePage() {
         {/* Join form */}
         <section className="mt-6 rounded-2xl bg-white p-4 shadow-xl sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900">Join the queue</h2>
+          <button
+            type="button"
+            onClick={enableSound}
+            className="mt-3 w-full rounded-lg border border-indigo-300 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-50 sm:w-auto"
+          >
+            {soundEnabled ? "Sound enabled" : "Enable turn sound"}
+          </button>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -154,8 +192,8 @@ export default function HomePage() {
               </div>
               <div className="text-right">
                 {myTicket.status === "serving" ? (
-                  <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-indigo-700">
-                    🎉 It&apos;s your turn!
+                  <span className="inline-block rounded-full bg-white px-4 py-2 text-sm font-semibold text-indigo-700">
+                    It&apos;s your turn!
                   </span>
                 ) : myTicket.status === "done" ? (
                   <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
