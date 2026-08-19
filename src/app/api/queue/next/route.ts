@@ -1,11 +1,16 @@
 import { db } from "@/db";
 import { queueEntries } from "@/db/schema";
 import { and, asc, eq } from "drizzle-orm";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/queue/next — admin picks the next waiting person (skips any leftover "called" state)
 export async function POST() {
+  if (!(await isAdminAuthenticated())) {
+    return Response.json({ error: "Admin authentication required." }, { status: 401 });
+  }
+
   // If someone is already "called"/"serving", keep them. Otherwise pick the first "waiting".
   const active = await db
     .select()

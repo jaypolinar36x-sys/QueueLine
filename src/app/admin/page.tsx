@@ -1,14 +1,75 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQueue } from "@/hooks/useQueue";
 import type { QueueEntry } from "@/lib/queue";
 import Link from "next/link";
 
 export default function AdminPage() {
   const { entries, loading, refresh } = useQueue(2500);
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loggingIn, setLoggingIn] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/session")
+      .then((res) => res.json())
+      .then((data) => setAuthenticated(data.authenticated === true))
+      .catch(() => setAuthenticated(false));
+  }, []);
+
+  async function login(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoggingIn(true);
+    setLoginError(null);
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setAuthenticated(true);
+      setPassword("");
+      refresh();
+    } else {
+      setLoginError(data.error ?? "Unable to sign in.");
+    }
+    setLoggingIn(false);
+  }
+
+  if (authenticated !== true) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-100 px-6 text-slate-900">
+        <form onSubmit={login} className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+          <h1 className="text-2xl font-semibold tracking-tight">Admin Panel</h1>
+          <p className="mt-2 text-sm text-slate-500">Enter the admin password to continue.</p>
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Admin password"
+            className="mt-6 w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            autoFocus
+          />
+          {loginError && <p className="mt-3 text-sm text-rose-600">{loginError}</p>}
+          <button
+            type="submit"
+            disabled={loggingIn || !password}
+            className="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-3 font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50"
+          >
+            {loggingIn ? "Signing in..." : "Sign in"}
+          </button>
+          <Link href="/" className="mt-4 block text-center text-sm text-slate-500 hover:text-slate-700">
+            Back to queue
+          </Link>
+        </form>
+      </main>
+    );
+  }
 
   const serving = entries.find((e) => e.status === "serving");
   const waiting = entries.filter((e) => e.status === "waiting");
