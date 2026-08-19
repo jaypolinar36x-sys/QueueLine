@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "next dev with inspect",
+      "type": "shell",
+      "command": "node --inspect server.js",
+      "isBackground": true,
+      "problemMatcher": [],
+      "detail": "Run `node --inspect node_modules/.bin/next dev` to start dev server with debugger attached on port 9229"
+    }
+  ]
+}
