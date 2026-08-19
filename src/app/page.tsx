@@ -38,7 +38,7 @@ export default function HomePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const turnSoundRef = useRef<HTMLAudioElement | null>(null);
 
   const waiting = entries.filter((e) => e.status === "waiting");
   const serving = entries.find((e) => e.status === "serving");
@@ -51,22 +51,11 @@ export default function HomePage() {
     }
   }, [entries, myTicket?.id]);
 
-  const playTurnSound = useCallback(() => {
-    const AudioContextClass = window.AudioContext;
-    if (!AudioContextClass) return;
-
-    const audioContext = audioContextRef.current ?? new AudioContextClass();
-    audioContextRef.current = audioContext;
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.frequency.value = 880;
-    oscillator.type = "sine";
-    gain.gain.setValueAtTime(0.001, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.25, audioContext.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.45);
-    oscillator.connect(gain).connect(audioContext.destination);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.45);
+  const playTurnSound = useCallback(async () => {
+    const audio = turnSoundRef.current;
+    if (!audio) return;
+    audio.currentTime = 0;
+    await audio.play().catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -76,12 +65,11 @@ export default function HomePage() {
   }, [myTicket?.status, soundEnabled, playTurnSound]);
 
   const prepareTurnSound = useCallback(async () => {
-    const AudioContextClass = window.AudioContext;
-    if (!AudioContextClass) return;
-
-    const audioContext = audioContextRef.current ?? new AudioContextClass();
-    audioContextRef.current = audioContext;
-    await audioContext.resume();
+    const audio = turnSoundRef.current;
+    if (!audio) return;
+    await audio.play().catch(() => undefined);
+    audio.pause();
+    audio.currentTime = 0;
     setSoundEnabled(true);
   }, []);
 
@@ -115,6 +103,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100">
+      <audio ref={turnSoundRef} src="/not.mp3" preload="auto" />
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         {/* Header */}
         <header className="flex items-center justify-between">
