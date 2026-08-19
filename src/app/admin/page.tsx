@@ -41,6 +41,30 @@ export default function AdminPage() {
     setLoggingIn(false);
   }
 
+  const call = useCallback(
+    async (action: string, path: string, body?: object) => {
+      setBusy(action);
+      setError(null);
+      try {
+        const res = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error ?? "Request failed");
+        }
+        refresh();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Something went wrong");
+      } finally {
+        setBusy(null);
+      }
+    },
+    [refresh]
+  );
+
   if (authenticated !== true) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-100 px-6 text-slate-900">
@@ -74,30 +98,6 @@ export default function AdminPage() {
   const serving = entries.find((e) => e.status === "serving");
   const waiting = entries.filter((e) => e.status === "waiting");
   const done = entries.filter((e) => e.status === "done");
-
-  const call = useCallback(
-    async (action: string, path: string, body?: object) => {
-      setBusy(action);
-      setError(null);
-      try {
-        const res = await fetch(path, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: body ? JSON.stringify(body) : undefined,
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error ?? "Request failed");
-        }
-        refresh();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong");
-      } finally {
-        setBusy(null);
-      }
-    },
-    [refresh]
-  );
 
   const nextPerson = waiting[0];
 
